@@ -1,9 +1,9 @@
 streamlit
 pandas
 matplotlib
-opencv-python
 numpy
 Pillow
+opencv-python-headless==4.9.0.80
 python-dotenv
 groq
 reportlab
