@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import cv2
 import numpy as np
 from PIL import Image
 import os
@@ -122,20 +121,20 @@ Users can:
     st.dataframe(df)
 
 # -------------------------
-# IMAGE PREPROCESSING
+# IMAGE PREPROCESSING (FIXED)
 # -------------------------
 
 def preprocess_image(uploaded_file):
 
     image = Image.open(uploaded_file)
-    img = np.array(image)
 
-    resized = cv2.resize(img, (240,320))
+    # Resize using PIL (instead of cv2)
+    resized = image.resize((240, 320))
 
-    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray,(5,5),0)
+    # Convert to grayscale using PIL
+    gray = resized.convert("L")
 
-    return Image.fromarray(resized), blur
+    return resized, gray
 
 # -------------------------
 # INPUT TAB
@@ -216,7 +215,6 @@ Step-by-step Instructions
     result = completion.choices[0].message.content
 
     score_match = re.search(r'(\d{2,3})', result)
-
     score = int(score_match.group()) if score_match else 75
 
     return result, score
@@ -258,7 +256,6 @@ with tab3:
                     "Preservation Score": score
                 }])
 
-                
                 df = pd.concat([df, new_row], ignore_index=True)
 
                 df.to_csv(DATA_FILE, index=False)
@@ -275,7 +272,6 @@ with tab4:
 
         col1, col2 = st.columns(2)
 
-        # REGION WISE CHART
         with col1:
 
             st.markdown("### Region Wise Cuisine Consumption")
@@ -292,7 +288,6 @@ with tab4:
 
             st.pyplot(fig1)
 
-        # INGREDIENT PIE CHART
         with col2:
 
             st.markdown("### Ingredient Quantity Distribution")
@@ -324,9 +319,7 @@ with tab4:
 def generate_pdf():
 
     styles = getSampleStyleSheet()
-
     pdf_file = "cuisine_report.pdf"
-
     story = []
 
     story.append(Paragraph("Cultural Cuisine Preservation Report", styles['Title']))
@@ -366,16 +359,6 @@ def generate_pdf():
         f"Cuisine Preservation Score: {st.session_state.score}/100",
         styles['Heading3']
     ))
-
-    score_text = """
-Score Meaning:
-
-80 - 100 → Strong preservation of authentic culinary traditions  
-50 - 79 → Partially modernized traditional cuisine  
-Below 50 → Highly modified cultural recipe
-"""
-
-    story.append(Paragraph(score_text, styles['Normal']))
 
     doc = SimpleDocTemplate(pdf_file)
     doc.build(story)
